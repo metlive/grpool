@@ -20,15 +20,12 @@ func (w *worker) start(pool *Pool) {
 		for {
 			// worker free, add it to pool
 			w.workerPool <- w
-			//fmt.Println("w.free", w.workerPool, "\n")
 			select {
 			case job = <-w.jobChannel:
 				res, timeout, err := Do(w.jobtimeout, func() (interface{}, error) {
 					res, err := job.Jobfunc()
-					//fmt.Printf("job.Jobfunc", res, err, "\n")
 					return res, err
 				})
-			//fmt.Printf("withtimeout.Do", res, err, "\n")
 				w.Jobresult <- Jobresult{
 					Jobid:    job.Jobid,
 					Timedout: timeout,
@@ -37,7 +34,6 @@ func (w *worker) start(pool *Pool) {
 				}
 				pool.wg.Done()
 			case stop := <-w.stop:
-				//fmt.Printf("w.stop", stop, "\n")
 				if stop {
 					w.stop <- true
 					return
@@ -87,7 +83,7 @@ func (d *dispatcher) dispatch() {
 	}
 }
 
-func newDispatcher(workerPool chan *worker, jobQueue chan Job, jobresult chan Jobresult, timeout time.Duration ,pool *Pool) *dispatcher {
+func newDispatcher(workerPool chan *worker, jobQueue chan Job, jobresult chan Jobresult, timeout time.Duration, pool *Pool) *dispatcher {
 	d := &dispatcher{
 		workerPool: workerPool,
 		jobQueue:   jobQueue,
@@ -125,7 +121,6 @@ type Pool struct {
 	wg         sync.WaitGroup
 }
 
-
 // Will make pool of gorouting workers.
 // numWorkers - how many workers will be created for this pool
 // queueLen - how many jobs can we accept until we block
@@ -136,10 +131,10 @@ func NewPool(numWorkers int, jobQueueLen int, timeout time.Duration) *Pool {
 	workerPool := make(chan *worker, numWorkers)
 	PoolJobresult := make(chan Jobresult, jobQueueLen)
 	pool := &Pool{
-		JobQueue:   jobQueue,
-		Jobresult:  PoolJobresult,
+		JobQueue:  jobQueue,
+		Jobresult: PoolJobresult,
 	}
-	pool.dispatcher=newDispatcher(workerPool, jobQueue, PoolJobresult, timeout,pool)
+	pool.dispatcher = newDispatcher(workerPool, jobQueue, PoolJobresult, timeout, pool)
 	return pool
 }
 
@@ -167,7 +162,7 @@ func (p *Pool) WaitAll() {
 }
 
 // Will release resources used by pool
-func (p *Pool) Release() {
+func (p *Pool) Close() {
 	p.dispatcher.stop <- true
 	<-p.dispatcher.stop
 }

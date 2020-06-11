@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/linclin/grpool"
+	"github.com/metlive/grpool"
 )
 
 func main() {
@@ -19,8 +19,8 @@ func main() {
 	runtime.GOMAXPROCS(numCPUs)
 
 	// number of workers, size of job queue,job timeout
-	pool := grpool.NewPool(10, 100, 3 * time.Second)
-	defer pool.Release()
+	pool := grpool.NewPool(10, 100, 3*time.Second)
+	defer pool.Close()
 
 	// how many jobs we should wait
 	pool.WaitCount(100)
